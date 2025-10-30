@@ -1,0 +1,12 @@
+opencv-python-headless
+numpy
+psutil
+pyexiv2
+gpiod
+paramiko
+ntplib
+pydantic
+picamera2
+flask
+requests
+sdnotify

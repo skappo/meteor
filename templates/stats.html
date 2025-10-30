@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Event Statistics - Meteora</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .chart-container { background: #2b2b2b; border-radius: 12px; padding: 1.5em; box-shadow: 0 2px 6px rgba(0,0,0,0.5); margin-top: 2em; }
+  </style>
+</head>
+<body>
+  <header><h1>Event Statistics</h1></header>
+  <div class="main">
+    <p><a href="/?token={{ token }}">← Back to Main Dashboard</a></p>
+    <div class="chart-container">
+      <h2>Meteors Detected per Hour (UTC)</h2>
+      <canvas id="hourlyChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h2>Meteors Detected per Night</h2>
+      <canvas id="nightlyChart"></canvas>
+    </div>
+    <p><a href="/?token={{ token }}">← Back to Main Dashboard</a></p>
+  </div>
+  <script>
+    // Use a self-executing async function to fetch data and build charts
+    (async () => {
+        try {
+            const response = await fetch('/api/event_stats?token={{ token }}');
+            if (!response.ok) { throw new Error('Failed to fetch stats'); }
+            const stats = await response.json();
+
+            // --- Build Hourly Chart ---
+            const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
+            const hourlyLabels = Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0') + ':00');
+            const hourlyData = hourlyLabels.map((_, i) => stats.by_hour[i.toString()] || 0);
+
+            new Chart(hourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: hourlyLabels,
+                    datasets: [{
+                        label: 'Meteors per Hour',
+                        data: hourlyData,
+                        backgroundColor: 'rgba(97, 175, 239, 0.6)',
+                        borderColor: 'rgba(97, 175, 239, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true, ticks: { color: '#e0e0e0' } }, x: { ticks: { color: '#e0e0e0' } } },
+                    plugins: { legend: { labels: { color: '#e0e0e0' } } }
+                }
+            });
+
+            // --- Build Nightly Chart ---
+            const nightlyCtx = document.getElementById('nightlyChart').getContext('2d');
+            const sortedNights = Object.keys(stats.by_night).sort();
+            const nightlyLabels = sortedNights;
+            const nightlyData = sortedNights.map(night => stats.by_night[night]);
+
+            if (nightlyLabels.length > 0) {
+                new Chart(nightlyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: nightlyLabels,
+                        datasets: [{
+                            label: 'Meteors per Night',
+                            data: nightlyData,
+                            backgroundColor: 'rgba(152, 195, 121, 0.6)',
+                            borderColor: 'rgba(152, 195, 121, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: { y: { beginAtZero: true, ticks: { color: '#e0e0e0' } }, x: { ticks: { color: '#e0e0e0' } } },
+                        plugins: { legend: { labels: { color: '#e0e0e0' } } }
+                    }
+                });
+            } else {
+                nightlyCtx.font = '16px Segoe UI';
+                nightlyCtx.fillStyle = '#999';
+                nightlyCtx.textAlign = 'center';
+                nightlyCtx.fillText('No nightly data available yet.', nightlyCtx.canvas.width / 2, 50);
+            }
+
+        } catch (error) {
+            console.error('Error loading chart data:', error);
+        }
+    })();
+  </script>
+</body>
+</html>

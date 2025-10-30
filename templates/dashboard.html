@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meteora Pipeline Dashboard</title>
+  <meta http-equiv="refresh" content="10; url=/?token={{ token }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>Meteora Pipeline Status (v{{ status.version }})</h1>
+  </header>
+  {% if status.emergency_stop %}
+  <div style="border: 3px solid #e06c75; background: #3c3c3c; padding: 1.5em; margin: 1em 2em; border-radius: 8px; text-align: center;">
+      <h2 style="color: #e06c75; margin: 0 0 0.5em 0;">EMERGENCY STOP ACTIVATED</h2>
+      <p style="margin: 0; font-size: 1.1em;">
+          A critical error happen, the system is in an unknown state.
+          <br>All new data acquisition has been **HALTED** to prevent system failure.
+      </p>
+      <p style="margin-top: 1em;">
+          <strong>Action Required:</strong> Use the <a href="/files?token={{ token }}">File Manager</a> to manually delete files.
+          <br>A system restart will be required after space has been cleared.
+      </p>
+  </div>
+  {% endif %}
+  <div class="main">
+    <div class="card">
+      <h2>Pipeline Status</h2>
+      <table>
+        <tr><td>System Status</td><td class="{{ 'ok' if status.is_in_schedule else 'warn' }}">{{ 'Active Schedule' if status.is_in_schedule else 'Idle Schedule' }}</td></tr>
+        <tr><td>Capture Active</td><td class="{{ 'ok' if status.capture_active else 'warn' }}">{{ status.capture_active }}</td></tr>
+        <tr><td>Pipeline Mode</td><td class="{{ pipeline_mode_class }}">{{ pipeline_mode_str }}</td></tr>
+        <tr><td>Power Status</td><td class="{{ 'ok' if status.power_status == 'OK' else 'warn' }}">{{ status.power_status }}</td></tr>
+        <tr><td>Events Captured</td><td>{{ status.event_count }}</td></tr>
+        <tr><td>Last Illuminance (Lux)</td><td class="{{ illuminance_class }}">{{ status.last_illuminance }}</td></tr>
+        <tr><td>Last Sky StdDev / Stars</td><td class="{{ stars_class }}">{{ status.last_sky_stddev }} / {{ status.last_sky_stars }}</td></tr>
+        <tr><td>Last Heartbeat</td><td>{{ status.last_heartbeat }}</td></tr>
+        {{ sftp_status_html|safe }}
+      </table>
+    </div>
+    <div class="card">
+      <h2>Thread Status</h2>
+      <table>
+        {% for name in all_thread_names %}
+        <tr><td>{{ name }}</td><td class="{{ 'ok' if name in status.live_threads else 'err' }}">{{ 'OK' if name in status.live_threads else 'KO' }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="card">
+      <h2>System Vitals</h2>
+      <table>
+        <tr><td>System Date</td><td>{{ system_date }}</td></tr>
+        <tr><td>System Time (Local)</td><td>{{ system_time }}</td></tr>
+        <tr><td>CPU Temperature</td><td class="{{ 'warn' if cpu_temp_raw > 75 else 'ok' }}">{{ cpu_temp }}</td></tr>
+        <tr><td>Memory Usage</td><td class="{{ 'warn' if mem.percent > 80 else 'ok' }}">{{ mem_used }} ({{ mem.percent }}%)</td></tr>
+        <tr><td>Disk Usage ({{ monitor_path }})</td><td class="{{ 'err' if disk.percent > 90 else 'warn' if disk.percent > threshold else 'ok' }}">{{ disk_used }} ({{ disk.percent }}%)</td></tr>
+        <tr><td>Load Average (1m)</td><td>{{ load1 }}</td></tr>
+        <tr><td>Uptime</td><td>{{ uptime_str }}</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="section" style="padding: 0 2em;">
+    {{ last_event_html|safe }}
+  </div>
+  <div class="section" style="padding: 0 2em;">
+    {{ health_card_html|safe }}
+  </div>
+  <div class="section" style="padding: 0 2em;">
+    {{ log_viewer_html|safe }}
+  </div>
+  <div class="section" style="padding: 0 2em;">
+    {{ buttons_html|safe }}
+    {{ timeout_message_html|safe }}
+    {{ picture_box_html|safe }}
+    {{ config_and_calibration_html|safe }}
+  </div>
+  <div class="section" style="padding: 0 2em;>
+    {{ footer_table_html|safe }}
+  </div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>File Manager - Meteora Pipeline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>File Manager</h1>
+  </header>
+  <div class="main">
+    <p><a href="/?token={{ token }}">← Back to Main Dashboard</a></p>
+    <form action="/files/action?token={{ token }}" method="post">
+      <div class="card">
+        <h2>Events ({{ event_files|length }} files)</h2>
+        <table>
+          <thead>
+            <tr><th>Select</th><th>Filename</th><th>Size (MB)</th><th>Date Modified</th></tr>
+          </thead>
+          <tbody>
+            {% for f in event_files %}
+            <tr>
+                <td><input type="checkbox" name="selected_files" value="{{ f.path }}"></td>
+                <td>{{ f.name }}</td>
+                <td>{{ f.size_mb }}</td>
+                <td>{{ f.mtime }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Timelapse ({{ timelapse_files|length }} files)</h2>
+        <table>
+          <thead>
+            <tr><th>Select</th><th>Filename</th><th>Size (MB)</th><th>Date Modified</th></tr>
+          </thead>
+          <tbody>
+            {% for f in timelapse_files %}
+            <tr>
+                <td><input type="checkbox" name="selected_files" value="{{ f.path }}"></td>
+                <td>{{ f.name }}</td>
+                <td>{{ f.size_mb }}</td>
+                <td>{{ f.mtime }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <button type="submit" name="action" value="download">Download Selected</button>
+        <button type="submit" name="action" value="delete" class="btn-danger" onclick="return confirm('Are you sure you want to permanently delete the selected files?');">Delete Selected</button>
+        <p><a href="/?token={{ token }}">← Back to Main Dashboard</a></p>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
